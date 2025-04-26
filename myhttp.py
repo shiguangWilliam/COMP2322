@@ -5,35 +5,37 @@ class HTTP_STATUS:
     BAD_REQUEST = 400
     NOT_FOUND = 404
     INTERNAL_SERVER_ERROR = 500
+class HTTP_METHOD:
+    GET = "GET"
+    HEAD = "HEAD"
 class HTTP_Request:
     def __init__(self,arrval_time = None):
         self.method = None
-        self.positon = None
+        self.position = None
         self.arrival_time = None
         self.type = None
         self.charset = None
     def parse(self,msg):
         lines = msg.split("\n")
-        request_line = lines[0].split("/") # Method, URL, Version
+        request_line = lines[0].split(" ") # Method pos Version
         if(len(request_line) != 3):# request head format error
             return None
         elif(request_line[0].strip() == "GET"):
-            self.method = "GET"
+            self.method = HTTP_METHOD.GET
         elif(request_line[0].strip() == "HEAD"):
-            self.method = "HEAD"
+            self.method = HTTP_METHOD.HEAD
         else:
             return None
-        self.positon = HTTP_Request.get_position(request_line[1]) #url:http://domain.com/path format
-        self.type,self.charset = HTTP_Request.get_type(lines[1:]) #url:http://domain.com/path format
-    def get_position(url):
-        url_element = url.split("/")
-        if(len(url_element) != 4):
-            return None #url format lack of domain or path
-        path = url_element[3]
-        return path #相对路径
+        self.position = request_line[1] 
+        self.type,self.charset = HTTP_Request.get_type(lines[1:])
+        if self.type == None:
+            return None
+    
     def get_type(msg):
+        file_type = None
+        charset = "utf-8" #default charset
         for line in msg:
-            if "Contetn_type" in line:
+            if "Content_type" in line:
                 file_type = line.split(":")[1].strip()
             elif "Charset" in line:
                 charset = line.split(":")[1].strip()
@@ -46,14 +48,38 @@ class HTTP_Request:
         self.type = type
         self.charset = charset
     def gen_request_head(self,host, port):
-        request_head = f"{self.method}/{host}:{port}\{self.position}\Http/1.1\n"
+        request_head = f"{self.method} {self.position} Http/1.1\n"
         self.head = request_head
         return request_head
+    
+class FileHandler:
+    def __init__(self,http_obj:HTTP_Request):
+        self.file_path = http_obj.position
+        self.file_type = http_obj.type
+        self.charset = http_obj.charset
+    def exists(self):
+        return os.path.exists(self.file_path) and os.path.isfile(self.file_path) # check if file exists and not dir
+    def get_file_content(self):
+        if not self.exists():
+            return None
+        try:
+            if self.file_type == "text":
+                with open(self.file_path, 'r',encoding=self.charset) as f:
+                    content = f.read()
+                    content - content.encode(self.charset) # encode to bytes
+            elif self.file_type == "image":
+                with open(self.file_path, 'rb') as f:
+                    content = f.read()
+            return content
+        except Exception as e:
+            raise Exception("File Read Error") # file read error, will be handle outside in server.py
+
 class HTTP_Response:
-    def __init(self):
+    def __init__(self):
         self.status = None
         self.status_code = None
         self.body = None
+        self.content_type = None
         self.headers = None
     def set_status_code(self, status): # map talbe for status code
         if status == "OK":
@@ -72,45 +98,20 @@ class HTTP_Response:
         else:
             raise Exception("Unknown Status Code")
     def gen_response_head(self):
-        response_head = f"HTTP/1.1 {self.status_code} {self.status} {self.status}\n"
-        self.head = response_head
+        response_head_line = f"HTTP/1.1 {self.status_code} {self.status} {self.status}\n"
+        response_head={"Content-Type":str(self.content_type),
+                       "Content-Length":str(len(self.body))}
+        head_str = "\r\n".join(f"{key}: {value}" for key, value in response_head.items())
+        self.headers = response_head + "\r\n" + head_str + "\r\n"
+        response_head = self.headers
         return response_head
-    def set_body(self, http_obj:HTTP_Request):
-        file_handler = FileHandler(http_obj)
-        if http_obj.method == "GET":
-            if file_handler.exists():
-                self.body = file_handler.get_file_content()
-                self.set_status_code("OK")
-            else:
-                self.set_status_code("NOT_FOUND")
-        elif http_obj.method == "HEAD":
-            if file_handler.exists():
-                self.set_status_code("OK")
-            else:
-                self.set_status_code("NOT_FOUND")
+    def set_body(self, file_handler:FileHandler):
+        if file_handler == None or file_handler.exists() == False:
+            self.body = None
         else:
-            self.set_status_code("BAD_REQUEST")
+            self.content_type = file_handler.file_type
+            self.body = file_handler.get_file_content()
         
-class FileHandler:
-    def __init__(self,http_obj:HTTP_Request):
-        self.file_path = http_obj.position
-        self.file_type = http_obj.type
-        self.charset = http_obj.charset
-    def exists(self):
-        if os.path.exists(self.file_path):
-            return True
-        else:
-            return False
-    def get_file_content(self):
-        if self.exists():
-            if self.file_type == "text":
-                with open(self.file_path, 'r',encoding=self.charset) as f:
-                    content = f.read()
-            elif self.file_type == "image":
-                with open(self.file_path, 'rb',encoding=self.charset) as f:
-                    content = f.read()
-            return content
-        else:
-            return None
+        
 
     

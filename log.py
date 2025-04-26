@@ -5,7 +5,7 @@ import threading
 class Log:
     def init__(self):
         pass
-    def write_log(self, msg): #msg:[client_socket,addr]
+    def write_log(self, msg): #msg:[client_socket,addr,exception]
         timestamp = time.time()
         local_time = time.localtime(timestamp)
         utc_time = time.gmtime(timestamp)
