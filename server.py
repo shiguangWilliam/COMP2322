@@ -92,6 +92,13 @@ class Server:
                     response.set_status_code("BAD_REQUEST")
                     response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
                     log.write_log([str(addr), "Parse error"])
+            except UnSupportedMediaType as e:
+                logging.info(f"Unsupported media type from {addr}: {e}")
+                response = HTTP_Response()
+                response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
+                response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
+                log.write_log([str(addr), f"Unsupported media type: {e}"])
+
             except Exception as e:
                 logging.info(f"Parse error from {addr}: {e}")
                 response = HTTP_Response()

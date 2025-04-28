@@ -1,5 +1,7 @@
 import socket
 import os
+import time
+import json
 class HTTP_STATUS:
     OK = 200
     BAD_REQUEST = 400
@@ -41,6 +43,27 @@ class FileTypeManager:
             return True
         else:
             return False
+
+class Cache_Table_manager:
+    def __init__(self,cache_table):
+        self.cache_table_pos = cache_table
+        with open(self.cache_table_pos, 'r') as f:
+            self.table = json.loads(f)
+    def check_cache(self,file_path):
+        cache = self.table.get(file_path)
+        if cache is None:
+            return None
+        last_modified_time = cache.get("last_modified_time")
+        cache_file_path = cache.get("file_path")
+        return (last_modified_time, cache_file_path)
+    def update_cache(self,file_path, last_modified_time, path):
+        self.table[file_path] = {
+            "last_modified_time": last_modified_time,
+            "file_path": path
+        }
+        with open(self.cache_table_pos, 'w') as f:
+            json.dump(self.table, f)
+ 
 class HTTP_Request:
     def __init__(self):
         self.method = None
@@ -67,10 +90,30 @@ class HTTP_Request:
         
         self.position = request_line[1] 
         self.type,self.charset = HTTP_Request.get_type(lines[1:])
+        if FileTypeManager().check_file_type(self.position) == False:
+            raise UnSupportedMediaType()
+        self.last_modified_time = HTTP_Request.get_last_modified_time(lines[1:])
+        self.keep_alive = HTTP_Request.get_keep_alive(lines[1:])
         if self.type == None:
             return None
         return self
-    
+    def get_keep_alive(msg):
+        keep_alive = False
+        for line in msg:
+            if "Connection" in line:
+                if "keep-alive" in line:
+                    keep_alive = True
+                
+        return keep_alive
+    def parse_http_data(http_data:str):
+        ts_tuple = time.strptime(http_data, "%Y-%m-%d %H:%M:%S")
+        return ts_tuple
+    def get_last_modified_time(msg):
+        last_modified_time = None
+        for line in msg:
+            if "Last-Modified" in line:
+                last_modified_time = HTTP_Request.get_last_modified_time(line.split(":")[1].strip())
+        return last_modified_time
     def get_type(msg):
         file_type = None
         charset = "utf-8" #default charset
@@ -85,12 +128,27 @@ class HTTP_Request:
     def set_position(self, position):
         self.position = position
     def set_type(self,type, charset):
-        self.type = type
+        self.type = FileTypeManager().get_file_type(type)
+        if self.type == None:
+            self.type = type #set to request type(will be handle by server)
         self.charset = charset
+    def set_last_modified_time(self,cache_table_manager:Cache_Table_manager):
+        info_list = cache_table_manager.check_cache(self.position)
+        if info_list == None:
+            self.last_modified_time = ""
+        else:
+            self.last_modified_time = info_list[0]
+    def set_connection(self, connection):
+        if connection == "keep-alive":
+            self.keep_alive = True
+        else:
+            self.keep_alive = False
     def gen_request(self,host, port):
         request_head = f"{self.method} {self.position} Http/1.1\r\n"
         request_body = {"Content-Type":self.type,
-                           "Charset":self.charset}
+                           "Charset":self.charset,
+                           "Is-Modified-Since":self.last_modified_time,
+                           "Connection":"keep-alive" if self.keep_alive else "close"}
         request_head += "\r\n".join(f"{key}: {value}" for key, value in request_body.items())
         return request_head
     
