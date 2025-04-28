@@ -5,9 +5,42 @@ class HTTP_STATUS:
     BAD_REQUEST = 400
     NOT_FOUND = 404
     INTERNAL_SERVER_ERROR = 500
+    FORBIDDEN = 403
+    NOT_MODIFIED = 304
+    UNSUPPORTED_MEDIA_TYPE = 415
 class HTTP_METHOD:
     GET = "GET"
     HEAD = "HEAD"
+class UnSupportedMediaType(Exception):...
+class FiletTypeManager:
+    def __init__(self):
+        self.supported_types = {
+            "txt":"text",
+            "html":"text",
+            "css":"text",
+            "js":"text",
+            "json":"text",
+            "jpg":"image",
+            "jpeg":"image",
+            "png":"image",
+        }
+         
+    def get_file_type(self, file_path):
+        if not os.path.exists(file_path):
+            return None
+        file_name, file_extension = os.path.splitext(file_path)
+        file_extension = file_extension[1:]
+        if file_extension in self.supported_types:
+            return f"{self.supported_types.get(file_extension)}/{file_extension}"
+        else:
+            return None # 415 Unsupported Media Type
+    def check_file_type(self,file_path):
+        file_name, file_extension = os.path.splitext(file_path)
+        file_extension = file_extension[1:]
+        if file_extension in self.supported_types:
+            return True
+        else:
+            return False
 class HTTP_Request:
     def __init__(self):
         self.method = None
@@ -64,10 +97,18 @@ class FileHandler:
         self.file_path = http_obj.position
         self.file_type = http_obj.type
         self.charset = http_obj.charset
+        self.exception_flag = False
+        self.exception_msg = None
+        self.file_type_manager = FiletTypeManager()
     def exists(self):
         return os.path.exists(self.file_path) and os.path.isfile(self.file_path) # check if file exists and not dir
     def get_file_content(self):
         if not self.exists():
+            return None
+        # file_type_manager = FiletTypeManager()
+        if self.file_type_manager.check_file_type(self.file_path) == False:
+            self.exception_flag = True
+            self.exception_msg = UnSupportedMediaType()
             return None
         try:
             if self.file_type == "text":
@@ -77,8 +118,19 @@ class FileHandler:
                 with open(self.file_path, 'rb') as f:
                     content = f.read()
             return content
+        except FileNotFoundError:
+            self.exception_flag = True
+            self.exception_msg = e
+            return None
+        except PermissionError:
+            self.exception_flag = True
+            self.exception_msg = e
+            return None
         except Exception as e:
-            raise Exception("File Read Error") # file read error, will be handle outside in server.py
+            self.exception_flag = True
+            self.exception_msg = e
+            return None
+            # raise Exception("File Read Error") # file read error, will be handle outside in server.py
     def get_last_modified_time(self):
         if not self.exists():
             return None
@@ -86,32 +138,35 @@ class FileHandler:
             last_modified_time = os.path.getmtime(self.file_path)
             return last_modified_time
         except Exception as e:
-            raise Exception("File Read Error")
+            self.exception_flag = True
+            self.exception_msg = e
+            return None
+            # raise Exception("File Read Error")
 class HTTP_Response:
+    STATUS_MAP = {
+        "OK": HTTP_STATUS.OK,
+        "BAD_REQUEST": HTTP_STATUS.BAD_REQUEST,
+        "NOT_FOUND": HTTP_STATUS.NOT_FOUND,
+        "INTERNAL_SERVER_ERROR": HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        "FORBIDDEN": HTTP_STATUS.FORBIDDEN,
+        "NOT_MODIFIED": HTTP_STATUS.NOT_MODIFIED,
+        "UNSUPPORTED_MEDIA_TYPE": HTTP_STATUS.UNSUPPORTED_MEDIA_TYPE,
+    }
     def __init__(self):
         self.status = None
         self.status_code = None
         self.body = None
         self.content_type = None
         self.headers = None
+        
     def set_status_code(self, status): # map talbe for status code
-        if status == "OK":
-            self.status_code = HTTP_STATUS.OK
+        if status in HTTP_Response.STATUS_MAP:
+            self.status_code = HTTP_Response.STATUS_MAP[status]
             self.status = status
-        elif status == "BAD_REQUEST":
-            self.status_code = HTTP_STATUS.BAD_REQUEST
-            self.status = status
-        elif status == "NOT_FOUND":
-            self.status_code = HTTP_STATUS.NOT_FOUND
-            self.status = status
-        elif status == "INTERNAL_SERVER_ERROR":
-            self.status_code = HTTP_STATUS.INTERNAL_SERVER_ERROR
-            self.status = status
-            raise Exception("Internal Server Error")
         else:
             raise Exception("Unknown Status Code")
     def gen_response_head(self):
-        response_head_line = f"HTTP/1.1 {self.status_code} {self.status} {self.status}\n"
+        response_head_line = f"HTTP/1.1 {self.status_code} {self.status}\n"
         response_head={"Content-Type":str(self.content_type),
                        "Content-Length":str(len(self.body))}
         head_str = "\r\n".join(f"{key}: {value}" for key, value in response_head.items())
@@ -123,11 +178,22 @@ class HTTP_Response:
             self.body = None
         else:
             self.content_type = file_handler.file_type
-            self.body = file_handler.get_file_content()
+            content = file_handler.get_file_content()
+            if content != None:
+                self.body = file_handler.get_file_content()
+            elif file_handler.exception_flag == True:
+                self.body = None
+                raise file_handler.exception_msg
     def get_response(self):
         if self.body is None:
             return self.headers
         return self.headers + self.body
+    def parse(self,msg):
+        lines = msg.split("\r\n")
+        header = lines[0].split(" ") # Method pos Version
+        self.status_code = header[1]
+        self.status = header[2]
+        
 
 
 

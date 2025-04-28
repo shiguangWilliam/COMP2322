@@ -5,7 +5,7 @@ import os
 import logging
 import time
 from log import Log
-from myhttp import HTTP_Request, HTTP_Response, FileHandler, HTTP_STATUS, HTTP_METHOD
+from myhttp import HTTP_Request, HTTP_Response, FileHandler, UnSupportedMediaType, HTTP_METHOD
 
 class Server:
     def __init__(self):
@@ -105,8 +105,21 @@ class Server:
                     fh = FileHandler(http_obj)
                     if fh.exists():
                         response = HTTP_Response()
-                        response.set_status_code("OK")
-                        response.set_body(fh)
+                        if type(fh.exception_msg) == PermissionError:
+                            response.set_status_code("FORBIDDEN")
+                            response.body = "<html><body><h1>403 Forbidden</h1></body></html>"
+                            log.write_log([str(addr), "Permission denied"])
+                        elif type(fh.exception_msg) == FileNotFoundError:
+                            response.set_status_code("NOT_FOUND")
+                            response.body = "<html><body><h1>404 Not Found</h1></body></html>"
+                            log.write_log([str(addr), "File not found"])
+                        elif type(fh.exception_msg) == UnSupportedMediaType:
+                            response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
+                            response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
+                            log.write_log([str(addr), "Unsupported media type"])
+                        else:
+                            response.set_status_code("OK")
+                            response.set_body(fh)
                     else:
                         response = HTTP_Response()
                         response.set_status_code("NOT_FOUND")
@@ -125,7 +138,7 @@ class Server:
         try:
             if response:
                 logging.info(f"type:{type(response.gen_response_head())}")
-                client_socket.send((response.gen_response_head() + (response.body if response.body else "")).encode())
+                client_socket.send((response.gen_response_head() + (str(response.body) if response.body else "")).encode())
         except Exception as e:
             logging.info(f"Send response error: {e}")
             log.write_log([str(addr), f"Send response error: {e}"])

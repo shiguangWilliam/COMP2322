@@ -1,2 +1,3 @@
-msg={1,1,ValueError ("test")} 
-print(msg)
+e = PermissionError()
+if type(e) == PermissionError:
+    print("PermissionError")
