@@ -12,7 +12,7 @@ class HTTP_METHOD:
     GET = "GET"
     HEAD = "HEAD"
 class UnSupportedMediaType(Exception):...
-class FiletTypeManager:
+class FileTypeManager:
     def __init__(self):
         self.supported_types = {
             "txt":"text",
@@ -51,7 +51,9 @@ class HTTP_Request:
         return f"Method: {self.method}, Position: {self.position}, Type: {self.type}, Charset: {self.charset}"
     def parse(self,msg):
         lines = msg.split("\r\n")
-        print(f"Received data: {lines}")
+        if(len(lines)<2):
+            return None
+        
         request_line = lines[0].split(" ") # Method pos Version
         print(f"Request line: {request_line[0].strip()}")
         if(len(request_line) != 3):# request head format error
@@ -99,7 +101,7 @@ class FileHandler:
         self.charset = http_obj.charset
         self.exception_flag = False
         self.exception_msg = None
-        self.file_type_manager = FiletTypeManager()
+        self.file_type_manager = FileTypeManager()
     def exists(self):
         return os.path.exists(self.file_path) and os.path.isfile(self.file_path) # check if file exists and not dir
     def get_file_content(self):
@@ -120,11 +122,11 @@ class FileHandler:
             return content
         except FileNotFoundError:
             self.exception_flag = True
-            self.exception_msg = e
+            self.exception_msg = FileNotFoundError()
             return None
         except PermissionError:
             self.exception_flag = True
-            self.exception_msg = e
+            self.exception_msg = PermissionError()
             return None
         except Exception as e:
             self.exception_flag = True
@@ -171,16 +173,18 @@ class HTTP_Response:
                        "Content-Length":str(len(self.body))}
         head_str = "\r\n".join(f"{key}: {value}" for key, value in response_head.items())
         self.headers = response_head_line + "\r\n" + head_str + "\r\n"
-        response_head = self.headers
-        return response_head
+        # response_head = self.headers
+        return self.headers # response head
     def set_body(self, file_handler:FileHandler):
         if file_handler == None or file_handler.exists() == False:
             self.body = None
+            self.status_code = HTTP_STATUS.NOT_FOUND
+            self.status = "NOT_FOUND"
         else:
-            self.content_type = file_handler.file_type
+            self.content_type = file_handler.file_type_manager.get_file_type(self.body)
             content = file_handler.get_file_content()
             if content != None:
-                self.body = file_handler.get_file_content()
+                self.body = content
             elif file_handler.exception_flag == True:
                 self.body = None
                 raise file_handler.exception_msg
