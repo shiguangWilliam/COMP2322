@@ -4,8 +4,8 @@ import json
 import os
 import logging
 import time
-from log import Log
-from myhttp import HTTP_Request, HTTP_Response, FileHandler, UnSupportedMediaType, HTTP_METHOD
+from log import Log, BadRequest, UnSupportedMediaType
+from myhttp import HTTP_Request, HTTP_Response, FileHandler, UnSupportedMediaType, HTTP_METHOD, Cache_Table_manager
 
 class Server:
     def __init__(self):
@@ -15,11 +15,14 @@ class Server:
                 config = json.load(f)
                 self.host = config.get("host", "127.0.0.1")
                 self.port = config.get("port", 42039)
+                self.root = config.get("root", os.getcwd())
         else:
             print(f"Configuration file {json_file} not found. Using default values.")
             self.host = "127.0.0.1"
             self.port = 42039
+            self.root = os.getcwd()
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
         logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s',handlers=[logging.StreamHandler()])
     def start(self):
         self.server_socket.bind(('', self.port))
@@ -92,45 +95,49 @@ class Server:
                     response.set_status_code("BAD_REQUEST")
                     response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
                     log.write_log([str(addr), "Parse error"])
-            except UnSupportedMediaType as e:
-                logging.info(f"Unsupported media type from {addr}: {e}")
+            except BadRequest as e:
+                logging.info(f"Bad request from {addr}: {e}")
                 response = HTTP_Response()
-                response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
-                response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
-                log.write_log([str(addr), f"Unsupported media type: {e}"])
-
+                response.set_status_code("BAD_REQUEST")
+                response.body = f"<html><body><h1>400 Bad Request.{e.args}</h1></body></html>"
+                log.write_log([str(addr), f"Bad request: {e}"])
             except Exception as e:
                 logging.info(f"Parse error from {addr}: {e}")
                 response = HTTP_Response()
                 response.set_status_code("BAD_REQUEST")
-                response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
+                response.body = "<html><body><h1>400 Bad Request,Unkonw except</h1></body></html>"
                 log.write_log([str(addr), f"Parse exception: {e}"])
         # 4. 业务逻辑处理
         if response is None:
             try:
                 if http_obj.method == HTTP_METHOD.GET or http_obj.method == HTTP_METHOD.HEAD:
                     fh = FileHandler(http_obj)
-                    if fh.exists():
-                        response = HTTP_Response()
-                        if type(fh.exception_msg) == PermissionError:
-                            response.set_status_code("FORBIDDEN")
-                            response.body = "<html><body><h1>403 Forbidden</h1></body></html>"
-                            log.write_log([str(addr), "Permission denied"])
-                        elif type(fh.exception_msg) == FileNotFoundError:
-                            response.set_status_code("NOT_FOUND")
-                            response.body = "<html><body><h1>404 Not Found</h1></body></html>"
-                            log.write_log([str(addr), "File not found"])
-                        elif type(fh.exception_msg) == UnSupportedMediaType:
-                            response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
-                            response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
-                            log.write_log([str(addr), "Unsupported media type"])
+                    
+                    fh.check(self.root)
+                    response = HTTP_Response()
+                    if isinstance(fh.exception_msg, PermissionError):
+                        response.set_status_code("FORBIDDEN")
+                        response.body = "<html><body><h1>403 Forbidden</h1></body></html>"
+                        log.write_log([str(addr), "Permission denied"])
+                    elif isinstance(fh.exception_msg, FileNotFoundError):
+                        response.set_status_code("NOT_FOUND")
+                        response.body = "<html><body><h1>404 Not Found</h1></body></html>"
+                        log.write_log([str(addr), "File not found"])
+                    elif isinstance(fh.exception_msg, UnSupportedMediaType):
+                        response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
+                        response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
+                        log.write_log([str(addr), "Unsupported media type"])
+                    else:
+                        if fh.get_last_modified_time() < http_obj.last_modified_time: # Not modified since
+                            response.set_status_code("NOT_MODIFIED")
+                            response.body = "<html><body><h1>304 Not Modified</h1></body></html>"
                         else:
                             response.set_status_code("OK")
                             response.set_body(fh)
-                    else:
-                        response = HTTP_Response()
-                        response.set_status_code("NOT_FOUND")
-                        response.body = "<html><body><h1>404 Not Found</h1></body></html>"
+                    # else:
+                    #     response = HTTP_Response()
+                    #     response.set_status_code("NOT_FOUND")
+                    #     response.body = "<html><body><h1>404 Not Found</h1></body></html>"
                 else:
                     response = HTTP_Response()
                     response.set_status_code("BAD_REQUEST")
@@ -144,8 +151,14 @@ class Server:
         # 5. 发送响应
         try:
             if response:
-                logging.info(f"type:{type(response.gen_response_head())}")
-                client_socket.send((response.gen_response_head() + (str(response.body) if response.body else "")).encode())
+                response_head = response.gen_response_head()
+                
+                if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
+                    response.body = None
+
+                response_msg = response_head.encode() + (response.body if isinstance(response.body, bytes) else response.body.encode())
+                client_socket.send(response_msg)
+                logging.info(f"Response sent to {addr}: {response_msg.decode()}")
         except Exception as e:
             logging.info(f"Send response error: {e}")
             log.write_log([str(addr), f"Send response error: {e}"])

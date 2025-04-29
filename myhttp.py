@@ -2,6 +2,8 @@ import socket
 import os
 import time
 import json
+import shutil
+from log import UnSupportedMediaType,BadRequest
 class HTTP_STATUS:
     OK = 200
     BAD_REQUEST = 400
@@ -13,7 +15,6 @@ class HTTP_STATUS:
 class HTTP_METHOD:
     GET = "GET"
     HEAD = "HEAD"
-class UnSupportedMediaType(Exception):...
 class FileTypeManager:
     def __init__(self):
         self.supported_types = {
@@ -45,10 +46,13 @@ class FileTypeManager:
             return False
 
 class Cache_Table_manager:
-    def __init__(self,cache_table):
+    def __init__(self,cache_table,cache_folder):
         self.cache_table_pos = cache_table
+        self.cache_folder = cache_folder
+        if os.path.exists(self.cache_table_pos) == False:
+            raise FileNotFoundError("Cache table not found")
         with open(self.cache_table_pos, 'r') as f:
-            self.table = json.loads(f)
+            self.table = json.loads(f.read())
     def check_cache(self,file_path):
         cache = self.table.get(file_path)
         if cache is None:
@@ -56,13 +60,21 @@ class Cache_Table_manager:
         last_modified_time = cache.get("last_modified_time")
         cache_file_path = cache.get("file_path")
         return (last_modified_time, cache_file_path)
-    def update_cache(self,file_path, last_modified_time, path):
+    def update_cache(self,file_path, last_modified_time):
         self.table[file_path] = {
             "last_modified_time": last_modified_time,
-            "file_path": path
+            "file_path": os.path.join(self.cache_folder, os.path.basename(file_path))
         }
         with open(self.cache_table_pos, 'w') as f:
             json.dump(self.table, f)
+    def copy_cache(self,source,dist):
+        if os.path.exists(source) == False:
+            return False
+        if os.path.exists(dist) == False:
+            os.makedirs(dist)
+        shutil.copy(source,dist)
+    
+        
  
 class HTTP_Request:
     def __init__(self):
@@ -70,6 +82,7 @@ class HTTP_Request:
         self.position = None
         self.type = None
         self.charset = None
+        self.parse_complete = False
     def __str__(self):
         return f"Method: {self.method}, Position: {self.position}, Type: {self.type}, Charset: {self.charset}"
     def parse(self,msg):
@@ -80,59 +93,78 @@ class HTTP_Request:
         request_line = lines[0].split(" ") # Method pos Version
         print(f"Request line: {request_line[0].strip()}")
         if(len(request_line) != 3):# request head format error
-            return None
+            raise(BadRequest("Request line format error"))
         elif(request_line[0].strip() == "GET"):
             self.method = HTTP_METHOD.GET
         elif(request_line[0].strip() == "HEAD"):
             self.method = HTTP_METHOD.HEAD
         else:
-            return None
+            raise(BadRequest("Request method error"))
         
         self.position = request_line[1] 
         self.type,self.charset = HTTP_Request.get_type(lines[1:])
-        if FileTypeManager().check_file_type(self.position) == False:
-            raise UnSupportedMediaType()
+        
         self.last_modified_time = HTTP_Request.get_last_modified_time(lines[1:])
         self.keep_alive = HTTP_Request.get_keep_alive(lines[1:])
-        if self.type == None:
-            return None
+
+        self.parse_complete = True #set complete flag
         return self
+    
     def get_keep_alive(msg):
         keep_alive = False
         for line in msg:
             if "Connection" in line:
                 if "keep-alive" in line:
                     keep_alive = True
+                return keep_alive
+        raise(BadRequest("Request Connection error"))
                 
         return keep_alive
     def parse_http_data(http_data:str):
-        ts_tuple = time.strptime(http_data, "%Y-%m-%d %H:%M:%S")
-        return ts_tuple
+        try:
+            ts_tuple = time.strptime(http_data, "%Y-%m-%d %H-%M-%S")
+        except ValueError:
+            raise(BadRequest("Request last modified time format error")) #Bad request
+        else:
+            return ts_tuple
     def get_last_modified_time(msg):
         last_modified_time = None
         for line in msg:
-            if "Last-Modified" in line:
-                last_modified_time = HTTP_Request.get_last_modified_time(line.split(":")[1].strip())
-        return last_modified_time
+            if "If-Modified-Since" in line:
+                last_modified_time = line.split(":")[1].strip()
+                if last_modified_time == "":
+                    return None
+                print(f"Last modified time: {last_modified_time}")
+                last_modified_time = HTTP_Request.parse_http_data(last_modified_time)
+                return last_modified_time
+        raise(BadRequest("Request last modified time error"))
     def get_type(msg):
         file_type = None
         charset = "utf-8" #default charset
+        flag_set = [False, False] # file type and charset flag
         for line in msg:
             if "Content-Type" in line:
                 file_type = line.split(":")[1].strip()
+                flag_set[0] = True  #find type
             elif "Charset" in line:
                 charset = line.split(":")[1].strip()
-        return file_type, charset #file type and charset
+                flag_set[1] = True #find charset
+        if all(flag_set):
+            return file_type, charset #No matter has content or empty.
+        raise (BadRequest("Request type error")) #Request must contain content type and charset
     def set_method(self, method):
         self.method = method
     def set_position(self, position):
         self.position = position
-    def set_type(self,type, charset):
+    def set_type(self, type, charset):
         self.type = FileTypeManager().get_file_type(type)
-        if self.type == None:
-            self.type = type #set to request type(will be handle by server)
+        if self.type is None:
+            self.type = type  # set to request type (will be handled by server)
         self.charset = charset
-    def set_last_modified_time(self,cache_table_manager:Cache_Table_manager):
+    def set_last_modified_time(self,cache_table_manager:Cache_Table_manager=None,timestamp=None):
+        if timestamp !=None: #set timestamp
+            self.last_modified_time = timestamp
+            return
         info_list = cache_table_manager.check_cache(self.position)
         if info_list == None:
             self.last_modified_time = ""
@@ -143,13 +175,18 @@ class HTTP_Request:
             self.keep_alive = True
         else:
             self.keep_alive = False
-    def gen_request(self,host, port):
-        request_head = f"{self.method} {self.position} Http/1.1\r\n"
-        request_body = {"Content-Type":self.type,
-                           "Charset":self.charset,
-                           "Is-Modified-Since":self.last_modified_time,
-                           "Connection":"keep-alive" if self.keep_alive else "close"}
-        request_head += "\r\n".join(f"{key}: {value}" for key, value in request_body.items())
+    def gen_request(self, host, port):
+        if not all(hasattr(self,attr) for attr in ['method', 'position', 'type', 'charset','last_modified_time', 'keep_alive']):
+            raise ValueError("All HTTP_Request attributes must be set before generating the request.")
+        
+        request_head = f"{self.method} {self.position} HTTP/1.1\r\n"
+        request_body = {
+            "Content-Type": self.type,
+            "Charset": self.charset,
+            "If-Modified-Since": time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(self.last_modified_time)) if self.last_modified_time else "",
+            "Connection": "keep-alive" if self.keep_alive else "close"
+        }
+        request_head += "\r\n".join(f"{key}: {value}" for key, value in request_body.items()) + "\r\n\r\n"
         return request_head
     
 class FileHandler:
@@ -160,6 +197,22 @@ class FileHandler:
         self.exception_flag = False
         self.exception_msg = None
         self.file_type_manager = FileTypeManager()
+    def check(self,root):
+        abs_path = os.path.abspath(self.file_path)
+        root_path = os.path.abspath(root)
+        if not abs_path.startswith(root_path):
+            self.exception_flag = True
+            self.exception_msg = PermissionError() #403
+            return False
+        if os.path.exists(self.file_path) == False:
+            self.exception_flag = True
+            self.exception_msg = FileNotFoundError() #404
+            return False
+        if self.file_type_manager.check_file_type(self.file_path) == False:
+            self.exception_flag = True
+            self.exception_msg = UnSupportedMediaType() #415
+            return False
+        return True
     def exists(self):
         return os.path.exists(self.file_path) and os.path.isfile(self.file_path) # check if file exists and not dir
     def get_file_content(self):
@@ -202,6 +255,9 @@ class FileHandler:
             self.exception_msg = e
             return None
             # raise Exception("File Read Error")
+    
+        
+    
 class HTTP_Response:
     STATUS_MAP = {
         "OK": HTTP_STATUS.OK,
@@ -233,29 +289,34 @@ class HTTP_Response:
         self.headers = response_head_line + "\r\n" + head_str + "\r\n"
         # response_head = self.headers
         return self.headers # response head
-    def set_body(self, file_handler:FileHandler):
-        if file_handler == None or file_handler.exists() == False:
+    def set_body(self, file_handler: FileHandler):
+        if file_handler is None or not file_handler.exists():
             self.body = None
             self.status_code = HTTP_STATUS.NOT_FOUND
             self.status = "NOT_FOUND"
         else:
-            self.content_type = file_handler.file_type_manager.get_file_type(self.body)
+            self.content_type = file_handler.file_type_manager.get_file_type(file_handler.file_path)
             content = file_handler.get_file_content()
-            if content != None:
+            if content is not None:
                 self.body = content
-            elif file_handler.exception_flag == True:
+            elif file_handler.exception_flag:
                 self.body = None
                 raise file_handler.exception_msg
     def get_response(self):
         if self.body is None:
             return self.headers
-        return self.headers + self.body
+        return self.headers.encode() + self.body if isinstance(self.body, bytes) else self.headers + self.body
     def parse(self,msg):
         lines = msg.split("\r\n")
+        if len(lines) < 4:
+            raise Exception("Invalid Response")
         header = lines[0].split(" ") # Method pos Version
         self.status_code = header[1]
         self.status = header[2]
-        
+        self.content_type = lines[1].split(":")[1].strip()
+        self.length = lines[2].split(":")[1].strip()
+        self.body = lines[3]
+
 
 
 

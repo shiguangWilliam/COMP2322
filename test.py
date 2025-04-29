@@ -1,4 +1,4 @@
+import os
 import time
-ts_tuple = time.strptime("2023-10-01 12:00:00", "%Y-%m-%d %H:%M:%S")
-ts = time.mktime(ts_tuple)
-print(ts_tuple) # 1696147200.0
+print(os.path.getmtime("text.txt"))
+print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime("text.txt"))))

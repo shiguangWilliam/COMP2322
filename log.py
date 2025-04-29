@@ -2,7 +2,10 @@ import time
 import socket
 import os
 import threading
-
+class UnSupportedMediaType(Exception):... #415
+#404:FileNotFoundError
+#403:PermissionError
+class BadRequest(Exception):... # 400
 class Log:
     def __init__(self):
         self.lock = threading.Lock()
