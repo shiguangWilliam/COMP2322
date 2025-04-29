@@ -159,6 +159,16 @@ class Client:
                 if next_step.lower() == "n":
                     clientSocket.close()
                     print("Connection closed")
+                    with open(self.cache_table, 'w') as f: #empty cache table
+                        pass
+                    def remove_cache_files(folder):
+                        for root, dirs, files in os.walk(folder):
+                            for file in files:
+                                if file == "cache_table.json":
+                                    continue
+                                file_path = os.path.join(root, file)
+                                os.remove(file_path)
+                    remove_cache_files(self.cache_folder) #empty cache folder
                     break
                 elif next_step.lower() == "y": 
                     if response is None:

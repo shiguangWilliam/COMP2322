@@ -108,7 +108,7 @@ class HTTP_Request:
         self.charset = None
         self.parse_complete = False
     def __str__(self):
-        return f"Method: {self.method}, Position: {self.position}, Type: {self.type}, Charset: {self.charset}"
+        return f"Method: {self.method}, Position: {self.position}, Type: {self.type}, Charset: {self.charset}, Last Modified Time: {self.last_modified_time}, Keep Alive: {self.keep_alive}"
     def parse(self,msg):
         lines = msg.split("\r\n")
         if(len(lines)<2):
@@ -169,6 +169,7 @@ class HTTP_Request:
         for line in msg:
             if "Content-Type" in line:
                 file_type = line.split(":")[1].strip()
+                file_type = re.split(r"/|\\",file_type)[0] # get file type
                 flag_set[0] = True  #find type
             elif "Charset" in line:
                 charset = line.split(":")[1].strip()
@@ -205,7 +206,7 @@ class HTTP_Request:
         
         request_head = f"{self.method} {self.position} HTTP/1.1\r\n"
         request_body = {
-            "Content-Type": self.type,
+            "Content-Type": f"{self.type}/{os.path.splitext(self.position)[1][1:]}",
             "Charset": self.charset,
             "If-Modified-Since": self.last_modified_time if self.last_modified_time else "",
             "Connection": "keep-alive" if self.keep_alive else "close"
@@ -224,6 +225,7 @@ class FileHandler:
     def check(self,root):
         abs_path = os.path.abspath(self.file_path)
         root_path = os.path.abspath(root)
+        
         if not abs_path.startswith(root_path):
             self.exception_flag = True
             self.exception_msg = PermissionError() #403
@@ -235,6 +237,13 @@ class FileHandler:
         if self.file_type_manager.check_file_type(self.file_path) == False:
             self.exception_flag = True
             self.exception_msg = UnSupportedMediaType() #415
+            return False
+        ft = FileTypeManager()
+        file_extension = os.path.splitext(self.file_path)[1][1:]
+        print(f"file_extension:{file_extension}, file_type:{self.file_type}, supported_types:{ft.supported_types.get(file_extension)}")
+        if ft.supported_types.get(file_extension) != self.file_type:
+            self.exception_flag = True
+            self.exception_msg = BadRequest("File type error") #400
             return False
         return True
     def exists(self):

@@ -34,9 +34,13 @@ class Server:
                 client_socket.settimeout(60)
                 logging.info(f"Client connected from {addr}")
                 arrival_time = time.time()
-                # 使用线程处理每个客户端
-                thread = threading.Thread(target=self.request_handle, args=(client_socket, addr, arrival_time))
-                thread.start()
+                # Use threading to handle multiple clients
+                try:
+                    thread = threading.Thread(target=self.request_handle, args=(client_socket, addr, arrival_time))
+                    thread.start()
+                except SystemExit:
+                    logging.info(f"Thread error: {threading.current_thread().name}")
+                    client_socket.close()
         except Exception as e:
             logging.info(f"Server error: {e}")
         finally:
@@ -48,7 +52,7 @@ class Server:
         while True:
             response = None
             data = b""
-            # 1. 接收数据
+            # recv data
             try:
                 logging.info(f"Handling request from {addr}")
                 while True:
@@ -75,7 +79,7 @@ class Server:
                 response.set_status_code("INTERNAL_SERVER_ERROR")
                 response.body = "<html><body><h1>500 Internal Server Error</h1></body></html>"
                 log.write_log([str(addr), f"Receive error: {e}"],True)
-            # 2. 解码数据
+            # decode data
             if response is None:
                 try:
                     data_str = data.decode()
@@ -85,7 +89,7 @@ class Server:
                     response.set_status_code("BAD_REQUEST")
                     response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
                     log.write_log([str(addr), f"Decode error: {e}"],False)
-            # 3. 解析HTTP请求
+            # parse http request
             if response is None:
                 try:
                     logging.info(f"Received data from {addr}: {data_str}")
@@ -96,6 +100,7 @@ class Server:
                         response.set_status_code("BAD_REQUEST")
                         response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
                         log.write_log([str(addr), "Parse error"],False)
+                    log.write_log([str(addr), f"Parsed HTTP request: {str(http_obj)}"],False)
                 except BadRequest as e:
                     logging.info(f"Bad request from {addr}: {e}")
                     response = HTTP_Response()
@@ -109,7 +114,7 @@ class Server:
                     response.body = "<html><body><h1>400 Bad Request,Unkonw except</h1></body></html>"
                     log.write_log([str(addr), f"Parse exception: {e}"],False)
             
-            # 4. 业务逻辑处理
+            #logic
             if response is None:
                 try:
                     if http_obj.method == HTTP_METHOD.GET or http_obj.method == HTTP_METHOD.HEAD:
@@ -133,6 +138,10 @@ class Server:
                             response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
                             response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
                             log.write_log([str(addr), "Unsupported media type"],False)
+                        elif isinstance(fh.exception_msg, BadRequest):
+                            response.set_status_code("BAD_REQUEST")
+                            response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
+                            log.write_log([str(addr), "Bad request"],False)
                         else:
                             if http_obj.last_modified_time is not None and int(fh.get_last_modified_time()) <= int(time.mktime(http_obj.last_modified_time)): # Not modified since
                                 print(f"Last:{time.mktime(http_obj.last_modified_time)}, fh:{fh.get_last_modified_time()}")
@@ -156,16 +165,18 @@ class Server:
                     response.set_status_code("INTERNAL_SERVER_ERROR")
                     response.body = "<html><body><h1>500 Internal Server Error</h1></body></html>"
                     log.write_log([str(addr), f"Business logic error: {e}"],True)
-            # 5. 发送响应
+            #send response
             try:
                 if response:
                     response_head = response.gen_response_head()
                     
                     if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
                         response.body = ""
+                        response.length = 0
 
                     response_msg = response_head.encode() + (response.body if isinstance(response.body, bytes) else response.body.encode())
                     client_socket.send(response_msg)
+                    log.write_log([addr, f"Response sent: {response_head}"],False)
                     if isinstance(response.body, bytes):
                         logging.info(f"Binary file sent to{addr}:{response_head}")
                     else:
