@@ -31,7 +31,7 @@ class Server:
         try:
             while True:
                 client_socket, addr = self.server_socket.accept()
-                client_socket.settimeout(5)
+                client_socket.settimeout(60)
                 logging.info(f"Client connected from {addr}")
                 arrival_time = time.time()
                 # 使用线程处理每个客户端
@@ -45,126 +45,142 @@ class Server:
 
     def request_handle(self, client_socket, addr, arrival_time):
         log = Log()
-        response = None
-        data = b""
-        # 1. 接收数据
-        try:
-            logging.info(f"Handling request from {addr}")
-            while True:
-                part = client_socket.recv(1024)
-                logging.info(f"Receiving： {part.decode()}")
-                if not part or len(part)<1024:
-                    logging.info(f"Received data from {addr}: {part},breaking")
-                    
-                    break
-                data += part
-            data += part
-            if not data:
-                logging.info(f"No data received from {addr}")
-                return
-        except socket.timeout:
-            logging.info(f"Timeout error from {addr}")
-            response = HTTP_Response()
-            response.set_status_code("BAD_REQUEST")
-            response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
-            log.write_log([str(addr), "Timeout error"])
-        except Exception as e:
-            logging.info(f"Receive error from {addr}: {e}")
-            response = HTTP_Response()
-            response.set_status_code("INTERNAL_SERVER_ERROR")
-            response.body = "<html><body><h1>500 Internal Server Error</h1></body></html>"
-            log.write_log([str(addr), f"Receive error: {e}"])
-        # 2. 解码数据
-        if response is None:
+        while True:
+            response = None
+            data = b""
+            # 1. 接收数据
             try:
-                data_str = data.decode()
-            except Exception as e:
-                logging.info(f"Decode error from {addr}: {e}")
+                logging.info(f"Handling request from {addr}")
+                while True:
+                    part = client_socket.recv(1024)
+                    logging.info(f"Receiving： {part.decode()}")
+                    if not part or len(part)<1024:
+                        logging.info(f"Received data from {addr}: {part},breaking")
+                        
+                        break
+                    data += part
+                data += part
+                if not data:
+                    logging.info(f"No data received from {addr}")
+                    return
+            except socket.timeout:
+                logging.info(f"Timeout error from {addr}")
                 response = HTTP_Response()
                 response.set_status_code("BAD_REQUEST")
                 response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
-                log.write_log([str(addr), f"Decode error: {e}"])
-        # 3. 解析HTTP请求
-        if response is None:
-            try:
-                logging.info(f"Received data from {addr}: {data_str}")
-                http_obj = HTTP_Request()
-                if  http_obj.parse(data_str) == None:
-                    logging.info(f"Failed to parse HTTP request from {addr}")
-                    response = HTTP_Response()
-                    response.set_status_code("BAD_REQUEST")
-                    response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
-                    log.write_log([str(addr), "Parse error"])
-            except BadRequest as e:
-                logging.info(f"Bad request from {addr}: {e}")
-                response = HTTP_Response()
-                response.set_status_code("BAD_REQUEST")
-                response.body = f"<html><body><h1>400 Bad Request.{e.args}</h1></body></html>"
-                log.write_log([str(addr), f"Bad request: {e}"])
+                log.write_log([str(addr), "Timeout error"],False)
             except Exception as e:
-                logging.info(f"Parse error from {addr}: {e}")
-                response = HTTP_Response()
-                response.set_status_code("BAD_REQUEST")
-                response.body = "<html><body><h1>400 Bad Request,Unkonw except</h1></body></html>"
-                log.write_log([str(addr), f"Parse exception: {e}"])
-        # 4. 业务逻辑处理
-        if response is None:
-            try:
-                if http_obj.method == HTTP_METHOD.GET or http_obj.method == HTTP_METHOD.HEAD:
-                    fh = FileHandler(http_obj)
-                    
-                    fh.check(self.root)
-                    response = HTTP_Response()
-                    if isinstance(fh.exception_msg, PermissionError):
-                        response.set_status_code("FORBIDDEN")
-                        response.body = "<html><body><h1>403 Forbidden</h1></body></html>"
-                        log.write_log([str(addr), "Permission denied"])
-                    elif isinstance(fh.exception_msg, FileNotFoundError):
-                        response.set_status_code("NOT_FOUND")
-                        response.body = "<html><body><h1>404 Not Found</h1></body></html>"
-                        log.write_log([str(addr), "File not found"])
-                    elif isinstance(fh.exception_msg, UnSupportedMediaType):
-                        response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
-                        response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
-                        log.write_log([str(addr), "Unsupported media type"])
-                    else:
-                        if fh.get_last_modified_time() < http_obj.last_modified_time: # Not modified since
-                            response.set_status_code("NOT_MODIFIED")
-                            response.body = "<html><body><h1>304 Not Modified</h1></body></html>"
-                        else:
-                            response.set_status_code("OK")
-                            response.set_body(fh)
-                    # else:
-                    #     response = HTTP_Response()
-                    #     response.set_status_code("NOT_FOUND")
-                    #     response.body = "<html><body><h1>404 Not Found</h1></body></html>"
-                else:
-                    response = HTTP_Response()
-                    response.set_status_code("BAD_REQUEST")
-                    response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
-            except Exception as e:
-                logging.info(f"Business logic error from {addr}: {e}")
+                logging.info(f"Receive error from {addr}: {e}")
                 response = HTTP_Response()
                 response.set_status_code("INTERNAL_SERVER_ERROR")
                 response.body = "<html><body><h1>500 Internal Server Error</h1></body></html>"
-                log.write_log([str(addr), f"Business logic error: {e}"])
-        # 5. 发送响应
-        try:
-            if response:
-                response_head = response.gen_response_head()
-                
-                if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
-                    response.body = None
+                log.write_log([str(addr), f"Receive error: {e}"],True)
+            # 2. 解码数据
+            if response is None:
+                try:
+                    data_str = data.decode()
+                except Exception as e:
+                    logging.info(f"Decode error from {addr}: {e}")
+                    response = HTTP_Response()
+                    response.set_status_code("BAD_REQUEST")
+                    response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
+                    log.write_log([str(addr), f"Decode error: {e}"],False)
+            # 3. 解析HTTP请求
+            if response is None:
+                try:
+                    logging.info(f"Received data from {addr}: {data_str}")
+                    http_obj = HTTP_Request()
+                    if  http_obj.parse(data_str) == None:
+                        logging.info(f"Failed to parse HTTP request from {addr}")
+                        response = HTTP_Response()
+                        response.set_status_code("BAD_REQUEST")
+                        response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
+                        log.write_log([str(addr), "Parse error"],False)
+                except BadRequest as e:
+                    logging.info(f"Bad request from {addr}: {e}")
+                    response = HTTP_Response()
+                    response.set_status_code("BAD_REQUEST")
+                    response.body = f"<html><body><h1>400 Bad Request.{e.args}</h1></body></html>"
+                    log.write_log([str(addr), f"Bad request: {e}"],False)
+                except Exception as e:
+                    logging.info(f"Parse error from {addr}: {e}")
+                    response = HTTP_Response()
+                    response.set_status_code("BAD_REQUEST")
+                    response.body = "<html><body><h1>400 Bad Request,Unkonw except</h1></body></html>"
+                    log.write_log([str(addr), f"Parse exception: {e}"],False)
+            
+            # 4. 业务逻辑处理
+            if response is None:
+                try:
+                    if http_obj.method == HTTP_METHOD.GET or http_obj.method == HTTP_METHOD.HEAD:
+                        fh = FileHandler(http_obj)
+                        
+                        fh.check(self.root)
+                        response = HTTP_Response()
+                        if hasattr(http_obj, "keep_alive") and http_obj.keep_alive == False:
+                            response.set_connectoin(False)
+                        elif hasattr(http_obj, "keep_alive") and http_obj.keep_alive == True:
+                            response.set_connectoin(True)
+                        if isinstance(fh.exception_msg, PermissionError):
+                            response.set_status_code("FORBIDDEN")
+                            response.body = "<html><body><h1>403 Forbidden</h1></body></html>"
+                            log.write_log([str(addr), "Permission denied"],False)
+                        elif isinstance(fh.exception_msg, FileNotFoundError):
+                            response.set_status_code("NOT_FOUND")
+                            response.body = "<html><body><h1>404 Not Found</h1></body></html>"
+                            log.write_log([str(addr), "File not found"],False)
+                        elif isinstance(fh.exception_msg, UnSupportedMediaType):
+                            response.set_status_code("UNSUPPORTED_MEDIA_TYPE")
+                            response.body = "<html><body><h1>415 Unsupported Media Type</h1></body></html>"
+                            log.write_log([str(addr), "Unsupported media type"],False)
+                        else:
+                            if http_obj.last_modified_time is not None and int(fh.get_last_modified_time()) <= int(time.mktime(http_obj.last_modified_time)): # Not modified since
+                                print(f"Last:{time.mktime(http_obj.last_modified_time)}, fh:{fh.get_last_modified_time()}")
+                                response.set_status_code("NOT_MODIFIED")
+                                response.body = ""
+                            else:
+                                response.set_status_code("OK")
+                                response.set_body(fh)
+                                response.set_last_modified(fh.get_last_modified_time())
+                        # else:
+                        #     response = HTTP_Response()
+                        #     response.set_status_code("NOT_FOUND")
+                        #     response.body = "<html><body><h1>404 Not Found</h1></body></html>"
+                    else:
+                        response = HTTP_Response()
+                        response.set_status_code("BAD_REQUEST")
+                        response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
+                except Exception as e:
+                    logging.info(f"Business logic error from {addr}: {e}")
+                    response = HTTP_Response()
+                    response.set_status_code("INTERNAL_SERVER_ERROR")
+                    response.body = "<html><body><h1>500 Internal Server Error</h1></body></html>"
+                    log.write_log([str(addr), f"Business logic error: {e}"],True)
+            # 5. 发送响应
+            try:
+                if response:
+                    response_head = response.gen_response_head()
+                    
+                    if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
+                        response.body = ""
 
-                response_msg = response_head.encode() + (response.body if isinstance(response.body, bytes) else response.body.encode())
-                client_socket.send(response_msg)
-                logging.info(f"Response sent to {addr}: {response_msg.decode()}")
-        except Exception as e:
-            logging.info(f"Send response error: {e}")
-            log.write_log([str(addr), f"Send response error: {e}"])
-        finally:
-            client_socket.close()
-            logging.info(f"Connection with {addr} closed")
+                    response_msg = response_head.encode() + (response.body if isinstance(response.body, bytes) else response.body.encode())
+                    client_socket.send(response_msg)
+                    if isinstance(response.body, bytes):
+                        logging.info(f"Binary file sent to{addr}:{response_head}")
+                    else:
+                        logging.info(f"Response sent to {addr}: {response_msg}")
+            except Exception as e:
+                logging.info(f"Send response error: {e}")
+                log.write_log([str(addr), f"Send response error: {e}"],True)
+            finally:
+                print(f"response:{response.connection}")
+                if response.connection == False:
+                    client_socket.close()
+                    logging.info(f"Connection with {addr} closed")
+                    break
+                client_socket.settimeout(60)
+            
 
 if __name__ == "__main__":
     server = Server()

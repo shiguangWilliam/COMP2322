@@ -1,4 +1,6 @@
 import os
 import time
-print(os.path.getmtime("text.txt"))
-print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(os.path.getmtime("text.txt"))))
+
+time_file = os.path.getmtime("text.txt")
+print(time_file)
+print(time.mktime(time.localtime(time_file)))

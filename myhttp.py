@@ -4,6 +4,7 @@ import time
 import json
 import shutil
 from log import UnSupportedMediaType,BadRequest
+import re
 class HTTP_STATUS:
     OK = 200
     BAD_REQUEST = 400
@@ -44,6 +45,10 @@ class FileTypeManager:
             return True
         else:
             return False
+    def parse_file_type(self,file_type:str):
+        s_type = re.split(r"/|\\",file_type)[1] 
+        print(f"stype:{s_type}")
+        return self.supported_types.get(s_type) # text/image
 
 class Cache_Table_manager:
     def __init__(self,cache_table,cache_folder):
@@ -52,8 +57,16 @@ class Cache_Table_manager:
         if os.path.exists(self.cache_table_pos) == False:
             raise FileNotFoundError("Cache table not found")
         with open(self.cache_table_pos, 'r') as f:
-            self.table = json.loads(f.read())
+            print(f.read())
+            f.seek(0) #test only
+            if f.read() =="":
+                self.table = {}
+            else:
+                f.seek(0) # init seek
+                self.table = json.load(f)
+                print(self.table)
     def check_cache(self,file_path):
+        print(f"table{self.table}")
         cache = self.table.get(file_path)
         if cache is None:
             return None
@@ -63,16 +76,27 @@ class Cache_Table_manager:
     def update_cache(self,file_path, last_modified_time):
         self.table[file_path] = {
             "last_modified_time": last_modified_time,
-            "file_path": os.path.join(self.cache_folder, os.path.basename(file_path))
+            "file_path": os.path.join(self.cache_folder, file_path)
         }
         with open(self.cache_table_pos, 'w') as f:
-            json.dump(self.table, f)
+            json.dump(self.to_dict(self.table), f)
     def copy_cache(self,source,dist):
         if os.path.exists(source) == False:
             return False
         if os.path.exists(dist) == False:
             os.makedirs(dist)
         shutil.copy(source,dist)
+    def to_dict(self,table):
+        print(dict(table))
+        return dict(table)
+    def reload(self):
+        with open(self.cache_table_pos, 'r') as f:
+            if f.read() =="":
+                self.table = {}
+                return
+            f.seek(0) #set to begin
+            self.table = json.load(f)
+        print(f"Reloaded cache table: {self.table}")
     
         
  
@@ -111,11 +135,11 @@ class HTTP_Request:
         return self
     
     def get_keep_alive(msg):
-        keep_alive = False
+        keep_alive = True
         for line in msg:
             if "Connection" in line:
-                if "keep-alive" in line:
-                    keep_alive = True
+                if "close" in line:
+                    keep_alive = False
                 return keep_alive
         raise(BadRequest("Request Connection error"))
                 
@@ -161,9 +185,9 @@ class HTTP_Request:
         if self.type is None:
             self.type = type  # set to request type (will be handled by server)
         self.charset = charset
-    def set_last_modified_time(self,cache_table_manager:Cache_Table_manager=None,timestamp=None):
-        if timestamp !=None: #set timestamp
-            self.last_modified_time = timestamp
+    def set_last_modified_time(self,cache_table_manager:Cache_Table_manager=None):
+        if cache_table_manager == None:
+            self.last_modified_time = None
             return
         info_list = cache_table_manager.check_cache(self.position)
         if info_list == None:
@@ -183,7 +207,7 @@ class HTTP_Request:
         request_body = {
             "Content-Type": self.type,
             "Charset": self.charset,
-            "If-Modified-Since": time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(self.last_modified_time)) if self.last_modified_time else "",
+            "If-Modified-Since": self.last_modified_time if self.last_modified_time else "",
             "Connection": "keep-alive" if self.keep_alive else "close"
         }
         request_head += "\r\n".join(f"{key}: {value}" for key, value in request_body.items()) + "\r\n\r\n"
@@ -274,6 +298,8 @@ class HTTP_Response:
         self.body = None
         self.content_type = None
         self.headers = None
+        self.connection = True # default keep-alive
+        self.last_modified = None
         
     def set_status_code(self, status): # map talbe for status code
         if status in HTTP_Response.STATUS_MAP:
@@ -282,9 +308,11 @@ class HTTP_Response:
         else:
             raise Exception("Unknown Status Code")
     def gen_response_head(self):
-        response_head_line = f"HTTP/1.1 {self.status_code} {self.status}\n"
+        response_head_line = f"HTTP/1.1 {self.status_code} {self.status}"
         response_head={"Content-Type":str(self.content_type),
-                       "Content-Length":str(len(self.body))}
+                       "Content-Length":str(len(self.body)),
+                       "Last-Modified":time.strftime("%Y-%m-%d %H-%M-%S", time.localtime(self.last_modified)) if self.last_modified else "",
+                       "Connection":"keep-alive" if self.connection else "close",}
         head_str = "\r\n".join(f"{key}: {value}" for key, value in response_head.items())
         self.headers = response_head_line + "\r\n" + head_str + "\r\n"
         # response_head = self.headers
@@ -302,20 +330,33 @@ class HTTP_Response:
             elif file_handler.exception_flag:
                 self.body = None
                 raise file_handler.exception_msg
+    def set_connectoin(self, connection):
+        if connection:
+            self.connection = True
+        else:
+            self.connection = False
+    def set_last_modified(self, last_modified_time):
+        self.last_modified = last_modified_time
     def get_response(self):
         if self.body is None:
             return self.headers
         return self.headers.encode() + self.body if isinstance(self.body, bytes) else self.headers + self.body
     def parse(self,msg):
         lines = msg.split("\r\n")
-        if len(lines) < 4:
+        for line in lines[:]: # iterate a copy of the list to avoid modifying it while iterating
+            if line == "":
+                lines.remove(line) # remove empty line
+        if len(lines) < 4 or len(lines)>5:
             raise Exception("Invalid Response")
         header = lines[0].split(" ") # Method pos Version
-        self.status_code = header[1]
+        self.status_code = int(header[1])
         self.status = header[2]
         self.content_type = lines[1].split(":")[1].strip()
         self.length = lines[2].split(":")[1].strip()
-        self.body = lines[3]
+        self.last_modified = lines[3].split(":")[1].strip()
+        self.connection = lines[4].split(":")[1].strip()
+        # self.body = lines[5]
+        
 
 
 
