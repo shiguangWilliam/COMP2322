@@ -5,12 +5,36 @@ import json
 from log import Log
 import logging
 import time
+import threading
 
 class CLI:
     def __init__(self):
-        pass
+        self.timeout = False
+
+    def get_input_with_timeout(self, prompt, timeout=60):
+        """Get user input with a timeout."""
+        user_input = [None]  # Use a mutable object to store input
+
+        def input_thread():
+            user_input[0] = input(prompt)
+
+        thread = threading.Thread(target=input_thread)
+        thread.daemon = True
+        thread.start()
+        thread.join(timeout)
+
+        if thread.is_alive():
+            self.timeout = True
+            print("\nInput timed out!")
+            return None
+        return user_input[0]
+
     def get_input(self):
-        command = input("Enter your command (GET/HEAD): ") #GET/HEAD File_Path File_Type(text/image) Connection)
+        """Get user input with timeout handling."""
+        command = self.get_input_with_timeout("Enter your command (GET/HEAD): ", timeout=60)
+        if command is None:
+            print("No input received within the timeout period.")
+            return None
         command_list = command.split(" ")
         return command_list
         
@@ -94,14 +118,24 @@ class Client:
             cli = CLI()
             self.cache_manager.reload() #update
             while True:
-                command = cli.get_input() #get command from user
+                command = cli.get_input() #get command from user with timeout
+                if cli.timeout is True:
+                    # print("Exiting due to no input.")
+                    clientSocket.close()
+                    self.connect = False
+                    cli.timeout = False
+                    continue
                 http_obj = cli.parse_command(command) #parse command
                 if http_obj != None:
                     break
+            
+            if self.connect == False:
+                clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                clientSocket.connect((self.host, self.port))  # reconnect to server
             self.file_path = http_obj.position  # file path
-            print(f"client table:{self.cache_manager.table}")
+            # print(f"client table:{self.cache_manager.table}")
             info = self.cache_manager.check_cache(http_obj.position)  # check cache table
-            print(info)
+            # print(info)
             if info != None:
                 http_obj.set_last_modified_time(cache_table_manager=self.cache_manager)   # get cache data
             else:
@@ -126,7 +160,7 @@ class Client:
                 datalist = data.split(b"\r\n")
                 
                 head_line = datalist[:5] #header line
-                print(head_line)
+                # print(head_line)
                 head = ""
                 for i in range(5):
                     head += datalist[i].decode() + "\r\n"
@@ -183,13 +217,13 @@ class Client:
     def parse_handle(self,i_response:HTTP_Response, http_obj:HTTP_Request):
         resposne = None
         response = i_response
-        print(response.status_code == "200")
+        # print(response.status_code == "200")
         if response.status_code == 200:
             if http_obj.method == HTTP_METHOD.GET:
                 self.cache_manager.update_cache(http_obj.position, response.last_modified)  # update cache table
                 ftype = FileTypeManager()
                 base_type = ftype.parse_file_type(response.content_type)  # parse file type
-                print(f"File type: {base_type}")
+                # print(f"File type: {base_type}")
                 io_mode = "w"
                 os.makedirs(os.path.dirname(http_obj.position), exist_ok=True)  # create directory if not exist
                 if base_type == "image":
@@ -200,7 +234,7 @@ class Client:
                 print(f"File {http_obj.position} saved to cache folder")
         elif response.status_code == 304:
             print(f"File {http_obj.position} has not been modified")
-            print(f"Source{os.path.join(self.cache_folder,os.path.dirname(http_obj.position))},dist{http_obj.position}")
+            # print(f"Source{os.path.join(self.cache_folder,os.path.dirname(http_obj.position))},dist{http_obj.position}")
             info = self.cache_manager.check_cache(http_obj.position)  # check cache table
             self.cache_manager.copy_cache(info[1],os.path.dirname(http_obj.position)) #copy file from cache folder
         else:

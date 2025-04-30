@@ -57,7 +57,7 @@ class Server:
                 logging.info(f"Handling request from {addr}")
                 while True:
                     part = client_socket.recv(1024)
-                    logging.info(f"Receiving： {part.decode()}")
+                    # logging.info(f"Receiving： {part.decode()}")
                     if not part or len(part)<1024:
                         logging.info(f"Received data from {addr}: {part},breaking")
                         
@@ -71,6 +71,7 @@ class Server:
                 logging.info(f"Timeout error from {addr}")
                 response = HTTP_Response()
                 response.set_status_code("BAD_REQUEST")
+                response.connection = False
                 response.body = "<html><body><h1>400 Bad Request</h1></body></html>"
                 log.write_log([str(addr), "Timeout error"],False)
             except Exception as e:
@@ -144,7 +145,7 @@ class Server:
                             log.write_log([str(addr), "Bad request"],False)
                         else:
                             if http_obj.last_modified_time is not None and int(fh.get_last_modified_time()) <= int(time.mktime(http_obj.last_modified_time)): # Not modified since
-                                print(f"Last:{time.mktime(http_obj.last_modified_time)}, fh:{fh.get_last_modified_time()}")
+                                # print(f"Last:{time.mktime(http_obj.last_modified_time)}, fh:{fh.get_last_modified_time()}")
                                 response.set_status_code("NOT_MODIFIED")
                                 response.body = ""
                             else:
@@ -168,11 +169,11 @@ class Server:
             #send response
             try:
                 if response:
-                    response_head = response.gen_response_head()
-                    
-                    if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
-                        response.body = ""
-                        response.length = 0
+                    if http_obj is not None:
+                        if http_obj.method == HTTP_METHOD.HEAD: #Head request, no body
+                            response.body = ""
+                            response.length = 0
+                        response_head = response.gen_response_head()
 
                     response_msg = response_head.encode() + (response.body if isinstance(response.body, bytes) else response.body.encode())
                     client_socket.send(response_msg)

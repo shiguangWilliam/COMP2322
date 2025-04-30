@@ -49,3 +49,7 @@ For example, you can set the root directory of client as `./client` and the root
   - "jpg":"image",
   - "jpeg":"image",
   - "png":"image",
+- If you receive some unexpect message which is seems like previous response, you can retry your command. This may because you have left for long time and server cause a timeout.
+- If client notice you `No input received with the timeout period`, this means that you have leaved for long time and server cause a timeout. You can try to retry your command.
+If you cannot find the command line input prompt, just click enter.
+- I add an `Internal Exception` status code `500` for my own debugging, you can ignore it.

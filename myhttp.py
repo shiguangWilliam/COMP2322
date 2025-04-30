@@ -47,7 +47,7 @@ class FileTypeManager:
             return False
     def parse_file_type(self,file_type:str):
         s_type = re.split(r"/|\\",file_type)[1] 
-        print(f"stype:{s_type}")
+        # print(f"stype:{s_type}"
         return self.supported_types.get(s_type) # text/image
 
 class Cache_Table_manager:
@@ -57,16 +57,16 @@ class Cache_Table_manager:
         if os.path.exists(self.cache_table_pos) == False:
             raise FileNotFoundError("Cache table not found")
         with open(self.cache_table_pos, 'r') as f:
-            print(f.read())
+            # print(f.read())
             f.seek(0) #test only
             if f.read() =="":
                 self.table = {}
             else:
                 f.seek(0) # init seek
                 self.table = json.load(f)
-                print(self.table)
+                # print(self.table)
     def check_cache(self,file_path):
-        print(f"table{self.table}")
+        # print(f"table{self.table}")
         cache = self.table.get(file_path)
         if cache is None:
             return None
@@ -87,7 +87,7 @@ class Cache_Table_manager:
             os.makedirs(dist)
         shutil.copy(source,dist)
     def to_dict(self,table):
-        print(dict(table))
+        # print(dict(table))
         return dict(table)
     def reload(self):
         with open(self.cache_table_pos, 'r') as f:
@@ -115,7 +115,7 @@ class HTTP_Request:
             return None
         
         request_line = lines[0].split(" ") # Method pos Version
-        print(f"Request line: {request_line[0].strip()}")
+        # print(f"Request line: {request_line[0].strip()}")
         if(len(request_line) != 3):# request head format error
             raise(BadRequest("Request line format error"))
         elif(request_line[0].strip() == "GET"):
@@ -158,7 +158,7 @@ class HTTP_Request:
                 last_modified_time = line.split(":")[1].strip()
                 if last_modified_time == "":
                     return None
-                print(f"Last modified time: {last_modified_time}")
+                # print(f"Last modified time: {last_modified_time}")
                 last_modified_time = HTTP_Request.parse_http_data(last_modified_time)
                 return last_modified_time
         raise(BadRequest("Request last modified time error"))
@@ -240,7 +240,7 @@ class FileHandler:
             return False
         ft = FileTypeManager()
         file_extension = os.path.splitext(self.file_path)[1][1:]
-        print(f"file_extension:{file_extension}, file_type:{self.file_type}, supported_types:{ft.supported_types.get(file_extension)}")
+        # print(f"file_extension:{file_extension}, file_type:{self.file_type}, supported_types:{ft.supported_types.get(file_extension)}")
         if ft.supported_types.get(file_extension) != self.file_type:
             self.exception_flag = True
             self.exception_msg = BadRequest("File type error") #400

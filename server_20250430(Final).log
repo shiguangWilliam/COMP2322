@@ -1,0 +1,462 @@
+UTC time: 2025-04-30 03:07:35, local time: 2025-04-30 11:07:35, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:07:35, local time: 2025-04-30 11:07:35, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: text/txt
+
+Content-Length: 31
+
+Last-Modified: 2025-04-29 19-42-26
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:08:35, local time: 2025-04-30 11:08:35, address: ('127.0.0.1', 10114), exception: Timeout error
+UTC time: 2025-04-30 03:08:35, local time: 2025-04-30 11:08:35, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:09:03, local time: 2025-04-30 11:09:03, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:09:03, local time: 2025-04-30 11:09:03, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:09:56, local time: 2025-04-30 11:09:56, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:09:56, local time: 2025-04-30 11:09:56, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:10:56, local time: 2025-04-30 11:10:56, address: ('127.0.0.1', 10114), exception: Timeout error
+UTC time: 2025-04-30 03:10:56, local time: 2025-04-30 11:10:56, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:11:32, local time: 2025-04-30 11:11:32, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:11:32, local time: 2025-04-30 11:11:32, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:11:52, local time: 2025-04-30 11:11:52, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:11:52, local time: 2025-04-30 11:11:52, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:12:52, local time: 2025-04-30 11:12:52, address: ('127.0.0.1', 10114), exception: Timeout error
+UTC time: 2025-04-30 03:12:52, local time: 2025-04-30 11:12:52, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:13:45, local time: 2025-04-30 11:13:45, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:13:45, local time: 2025-04-30 11:13:45, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:13:53, local time: 2025-04-30 11:13:53, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:13:53, local time: 2025-04-30 11:13:53, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:14:22, local time: 2025-04-30 11:14:22, address: ('127.0.0.1', 10114), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:14:22, local time: 2025-04-30 11:14:22, address: ('127.0.0.1', 10114), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:14:32, local time: 2025-04-30 11:14:32, address: ('127.0.0.1', 10114), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+[CRITICAL] UTC time: 2025-04-30 03:14:32, local time: 2025-04-30 11:14:32, address: ('127.0.0.1', 10114), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+UTC time: 2025-04-30 03:19:26, local time: 2025-04-30 11:19:26, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:19:26, local time: 2025-04-30 11:19:26, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: text/txt
+
+Content-Length: 0
+
+Last-Modified: 2025-04-29 19-42-26
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:19:45, local time: 2025-04-30 11:19:45, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:19:45, local time: 2025-04-30 11:19:45, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: text/txt
+
+Content-Length: 31
+
+Last-Modified: 2025-04-29 19-42-26
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:20:00, local time: 2025-04-30 11:20:00, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:20:00, local time: 2025-04-30 11:20:00, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:20:09, local time: 2025-04-30 11:20:09, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:20:09, local time: 2025-04-30 11:20:09, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:20:15, local time: 2025-04-30 11:20:15, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:20:15, local time: 2025-04-30 11:20:15, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:20:22, local time: 2025-04-30 11:20:22, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:20:22, local time: 2025-04-30 11:20:22, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:20:27, local time: 2025-04-30 11:20:27, address: ('127.0.0.1', 11191), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:20:27, local time: 2025-04-30 11:20:27, address: ('127.0.0.1', 11191), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:33:54, local time: 2025-04-30 11:33:54, address: ('127.0.0.1', 12104), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:33:54, local time: 2025-04-30 11:33:54, address: ('127.0.0.1', 12104), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:34:11, local time: 2025-04-30 11:34:11, address: ('127.0.0.1', 12145), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:34:11, local time: 2025-04-30 11:34:11, address: ('127.0.0.1', 12145), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: text/txt
+
+Content-Length: 31
+
+Last-Modified: 2025-04-29 19-42-26
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:34:23, local time: 2025-04-30 11:34:23, address: ('127.0.0.1', 12145), exception: Parsed HTTP request: Method: HEAD, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: False
+UTC time: 2025-04-30 03:34:23, local time: 2025-04-30 11:34:23, address: ('127.0.0.1', 12145), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 0
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: close
+
+
+UTC time: 2025-04-30 03:34:35, local time: 2025-04-30 11:34:35, address: ('127.0.0.1', 12168), exception: Parsed HTTP request: Method: HEAD, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:34:35, local time: 2025-04-30 11:34:35, address: ('127.0.0.1', 12168), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:35:39, local time: 2025-04-30 11:35:39, address: ('127.0.0.1', 12216), exception: Parsed HTTP request: Method: GET, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:35:39, local time: 2025-04-30 11:35:39, address: ('127.0.0.1', 12216), exception: Response sent: HTTP/1.1 200 OK
+
+Content-Type: image/jpg
+
+Content-Length: 71749
+
+Last-Modified: 2024-09-20 13-09-14
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:36:33, local time: 2025-04-30 11:36:33, address: ('127.0.0.1', 12249), exception: Parsed HTTP request: Method: GET, Position: testfile/image.jpg, Type: image, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2024, tm_mon=9, tm_mday=20, tm_hour=13, tm_min=9, tm_sec=14, tm_wday=4, tm_yday=264, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:36:33, local time: 2025-04-30 11:36:33, address: ('127.0.0.1', 12249), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:37:33, local time: 2025-04-30 11:37:33, address: ('127.0.0.1', 12249), exception: Timeout error
+UTC time: 2025-04-30 03:37:33, local time: 2025-04-30 11:37:33, address: ('127.0.0.1', 12249), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:37:35, local time: 2025-04-30 11:37:35, address: ('127.0.0.1', 12249), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+[CRITICAL] UTC time: 2025-04-30 03:37:35, local time: 2025-04-30 11:37:35, address: ('127.0.0.1', 12249), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+UTC time: 2025-04-30 03:37:51, local time: 2025-04-30 11:37:51, address: ('127.0.0.1', 12287), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: text, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:37:51, local time: 2025-04-30 11:37:51, address: ('127.0.0.1', 12287), exception: Response sent: HTTP/1.1 304 NOT_MODIFIED
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:38:59, local time: 2025-04-30 11:38:59, address: ('127.0.0.1', 12349), exception: Parsed HTTP request: Method: GET, Position: ..\config.json, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:38:59, local time: 2025-04-30 11:38:59, address: ('127.0.0.1', 12349), exception: Permission denied
+UTC time: 2025-04-30 03:38:59, local time: 2025-04-30 11:38:59, address: ('127.0.0.1', 12349), exception: Response sent: HTTP/1.1 403 FORBIDDEN
+
+Content-Type: None
+
+Content-Length: 48
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:39:58, local time: 2025-04-30 11:39:58, address: ('127.0.0.1', 12379), exception: Parsed HTTP request: Method: HEAD, Position: ..\config.pdf, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:39:58, local time: 2025-04-30 11:39:58, address: ('127.0.0.1', 12379), exception: Permission denied
+UTC time: 2025-04-30 03:39:58, local time: 2025-04-30 11:39:58, address: ('127.0.0.1', 12379), exception: Response sent: HTTP/1.1 403 FORBIDDEN
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:40:58, local time: 2025-04-30 11:40:58, address: ('127.0.0.1', 12379), exception: Timeout error
+UTC time: 2025-04-30 03:40:58, local time: 2025-04-30 11:40:58, address: ('127.0.0.1', 12379), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:41:33, local time: 2025-04-30 11:41:33, address: ('127.0.0.1', 12379), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+[CRITICAL] UTC time: 2025-04-30 03:41:33, local time: 2025-04-30 11:41:33, address: ('127.0.0.1', 12379), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+UTC time: 2025-04-30 03:41:38, local time: 2025-04-30 11:41:38, address: ('127.0.0.1', 12477), exception: Parsed HTTP request: Method: GET, Position: abc.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:41:38, local time: 2025-04-30 11:41:38, address: ('127.0.0.1', 12477), exception: File not found
+UTC time: 2025-04-30 03:41:38, local time: 2025-04-30 11:41:38, address: ('127.0.0.1', 12477), exception: Response sent: HTTP/1.1 404 NOT_FOUND
+
+Content-Type: None
+
+Content-Length: 48
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:42:26, local time: 2025-04-30 11:42:26, address: ('127.0.0.1', 12509), exception: Parsed HTTP request: Method: HEAD, Position: abc.txt, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:42:26, local time: 2025-04-30 11:42:26, address: ('127.0.0.1', 12509), exception: File not found
+UTC time: 2025-04-30 03:42:26, local time: 2025-04-30 11:42:26, address: ('127.0.0.1', 12509), exception: Response sent: HTTP/1.1 404 NOT_FOUND
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:43:26, local time: 2025-04-30 11:43:26, address: ('127.0.0.1', 12509), exception: Timeout error
+UTC time: 2025-04-30 03:43:26, local time: 2025-04-30 11:43:26, address: ('127.0.0.1', 12509), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:44:12, local time: 2025-04-30 11:44:12, address: ('127.0.0.1', 12509), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+[CRITICAL] UTC time: 2025-04-30 03:44:12, local time: 2025-04-30 11:44:12, address: ('127.0.0.1', 12509), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+UTC time: 2025-04-30 03:44:26, local time: 2025-04-30 11:44:26, address: ('127.0.0.1', 12578), exception: Parsed HTTP request: Method: GET, Position: Project.pdf, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:44:26, local time: 2025-04-30 11:44:26, address: ('127.0.0.1', 12578), exception: Unsupported media type
+UTC time: 2025-04-30 03:44:26, local time: 2025-04-30 11:44:26, address: ('127.0.0.1', 12578), exception: Response sent: HTTP/1.1 415 UNSUPPORTED_MEDIA_TYPE
+
+Content-Type: None
+
+Content-Length: 61
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:45:31, local time: 2025-04-30 11:45:31, address: ('127.0.0.1', 12623), exception: Parsed HTTP request: Method: HEAD, Position: Project.pdf, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: True
+UTC time: 2025-04-30 03:45:31, local time: 2025-04-30 11:45:31, address: ('127.0.0.1', 12623), exception: Unsupported media type
+UTC time: 2025-04-30 03:45:31, local time: 2025-04-30 11:45:31, address: ('127.0.0.1', 12623), exception: Response sent: HTTP/1.1 415 UNSUPPORTED_MEDIA_TYPE
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:46:09, local time: 2025-04-30 11:46:09, address: ('127.0.0.1', 12637), exception: Parsed HTTP request: Method: GET, Position: testfile/testfile.txt, Type: image, Charset: utf-8, Last Modified Time: time.struct_time(tm_year=2025, tm_mon=4, tm_mday=29, tm_hour=19, tm_min=42, tm_sec=26, tm_wday=1, tm_yday=119, tm_isdst=-1), Keep Alive: True
+UTC time: 2025-04-30 03:46:09, local time: 2025-04-30 11:46:09, address: ('127.0.0.1', 12637), exception: Bad request
+UTC time: 2025-04-30 03:46:09, local time: 2025-04-30 11:46:09, address: ('127.0.0.1', 12637), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:47:09, local time: 2025-04-30 11:47:09, address: ('127.0.0.1', 12637), exception: Timeout error
+UTC time: 2025-04-30 03:47:09, local time: 2025-04-30 11:47:09, address: ('127.0.0.1', 12637), exception: Response sent: HTTP/1.1 400 BAD_REQUEST
+
+Content-Type: None
+
+Content-Length: 50
+
+Last-Modified: 
+
+Connection: keep-alive
+
+
+UTC time: 2025-04-30 03:47:49, local time: 2025-04-30 11:47:49, address: ('127.0.0.1', 12637), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+[CRITICAL] UTC time: 2025-04-30 03:47:49, local time: 2025-04-30 11:47:49, address: ('127.0.0.1', 12637), exception: Receive error: [WinError 10054] Զ������ǿ�ȹر���һ�����е����ӡ�
+UTC time: 2025-04-30 03:47:58, local time: 2025-04-30 11:47:58, address: ('127.0.0.1', 12682), exception: Parsed HTTP request: Method: HEAD, Position: Project.pdf, Type: text, Charset: utf-8, Last Modified Time: None, Keep Alive: False
+UTC time: 2025-04-30 03:47:58, local time: 2025-04-30 11:47:58, address: ('127.0.0.1', 12682), exception: Unsupported media type
+UTC time: 2025-04-30 03:47:58, local time: 2025-04-30 11:47:58, address: ('127.0.0.1', 12682), exception: Response sent: HTTP/1.1 415 UNSUPPORTED_MEDIA_TYPE
+
+Content-Type: None
+
+Content-Length: 0
+
+Last-Modified: 
+
+Connection: close
+
+
